@@ -42,4 +42,29 @@ CHIP ALU {
 
     PARTS:
     //// Replace this comment with your code.
+    // Step 1: Handle zero and negation for x
+    Mux16(a=x, b=false, sel=zx, out=zeroedX);
+    Not16(in=zeroedX, out=notX);
+    Mux16(a=zeroedX, b=notX, sel=nx, out=processedX);
+
+    // Step 2: Handle zero and negation for y  
+    Mux16(a=y, b=false, sel=zy, out=zeroedY);  
+    Not16(in=zeroedY, out=notY);  
+    Mux16(a=zeroedY, b=notY, sel=ny, out=processedY); 
+
+    // Step 3: Perform the function (AND or ADD)  
+    And16(a=processedX, b=processedY, out=andXY);  
+    Add16(a=processedX, b=processedY, out=addXY);  
+    Mux16(a=andXY, b=addXY, sel=f, out=outFunc);  
+
+    // Step 4: Handle output negation  
+    Not16(in=outFunc, out=negatedOutFunc);  
+    Mux16(a=outFunc, b=negatedOutFunc, sel=no, out[15]=ng, out[0..7]=out07,out[8..15]=out815, out=out);  
+
+    // Step 5: Determine if the output is zero (zr)  
+    Or8Way(in=out07, out=orLow);  
+    Or8Way(in=out815, out=orHigh);  
+    Or(a=orLow, b=orHigh, out=orResult);  
+    Not(in=orResult, out=zr);  
+
 }
