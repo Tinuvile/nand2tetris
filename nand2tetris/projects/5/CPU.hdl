@@ -32,5 +32,42 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-	//// Replace this comment with your code.
+    //// Replace this comment with your code.
+    // 解码指令  
+    And(a=instruction[15], b=instruction[5], out=d1);  
+    And(a=instruction[15], b=instruction[4], out=d2);  
+    And(a=instruction[15], b=instruction[3], out=writeM);  
+    And(a=instruction[15], b=instruction[2], out=j1);  
+    And(a=instruction[15], b=instruction[1], out=j2);  
+    And(a=instruction[15], b=instruction[0], out=j3);  
+
+    // A 寄存器  
+    Mux16(a=instruction[0..15], b=outM, sel=instruction[15], out=Ainput);  
+    Not(in=instruction[15], out=Aload1);  
+    Or(a=d1, b=Aload1, out=Aload);  
+    // 将地址放入 addressM 的前 15 位
+    ARegister(in=Ainput, load=Aload, out=Areg, addressM=addressM[0..14]);  
+
+    // D 寄存器  
+    DRegister(in=outM, load=d2, out=Dreg);  
+
+    // ALU  
+    Mux16(a=Areg, b=inM, sel=instruction[12], out=y);  
+    ALU(x=Dreg, y=y,   
+        zx=instruction[11], nx=instruction[10],   
+        zy=instruction[9], ny=instruction[8],   
+        f=instruction[7], no=instruction[6],   
+        out=outM, zr=zr, ng=ng);  
+
+    // 程序计数器  
+    And(a=ng, b=j1, out=tmp1); // jump condition based on ng  
+    And(a=zr, b=j2, out=tmp2); // jump condition based on zr  
+    Not(in=zr, out=notzr); // zr not condition  
+    Not(in=ng, out=notng); // ng not condition  
+    And(a=notzr, b=notng, out=ps); // when neither is true  
+    And(a=ps, b=j3, out=tmp3); // jump condition based on j3  
+    Or(a=tmp1, b=tmp2, out=tmp); // combine jump conditions  
+    Or(a=tmp, b=tmp3, out=jump); // final jump condition  
+    Not(in=jump, out=inc); // increment if no jump  
+    PC(in=Areg, load=jump, inc=inc, reset=reset, out=pc);
 }

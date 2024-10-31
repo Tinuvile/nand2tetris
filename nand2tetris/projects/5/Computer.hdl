@@ -19,4 +19,19 @@ CHIP Computer {
 
     PARTS:
     //// Replace this comment with your code.
+    // 使用程序计数器生成指令地址  
+    PC(pc=pc, inc=inc, load=load_pc, reset=reset);  
+    
+    // ROM 存储程序的指令  
+    ROM32K(address=pc, out=instruction);  
+    
+    // CPU 执行从 ROM 读取的指令  
+    CPU(inM=Mout, instruction=instruction, reset=reset, outM=outM, writeM=writeM, addressM=addressM, pc=pc);  
+    
+    // RAM 作为计算机的内存  
+    Memory(in=outM, load=writeM, address=addressM, out=Mout);  
+
+    // 控制 PC 增量/跳转的信号  
+    Not(in=reset, out=load_pc);  
+    Inc(pc=pc, out=inc); 
 }

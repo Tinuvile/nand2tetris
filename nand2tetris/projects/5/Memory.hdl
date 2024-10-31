@@ -25,5 +25,17 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
-	//// Replace this comment with your code.
+    //// Replace this comment with your code.
+    // 解码load信号
+    DMux(in=load, sel=address[14], a=load1, b=load2);
+    DMux(in=load2, sel=address[13], a=load21, b=load22);
+    // RAM16k 处理普通内存读写
+    RAM16K(in=in, load=load21, address=address[0..12], out=out1);
+    // Screen 处理屏幕内存写入
+    Screen(in=in, load=load21, address=address[0..12], out=out2);
+    // Keyboard 输出
+    Keyboard(out=out3);
+    // 选择输出
+    Mux16(a=out2, b=out3, sel=address[13], out=tmp);
+    Mux16(a=out1, b=tmp, sel=address[14], out=out);
 }
